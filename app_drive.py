@@ -1,21 +1,12 @@
-# Código corrigido do app_drive.py para funcionar no Streamlit Cloud com secrets
-folder_id = "1bwU96yqfhAhVW7i0GP_USVddd-KIh39d"
 
-updated_code = f"""
 import streamlit as st
 import pandas as pd
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import os
-import json
-from streamlit.runtime.secrets import secrets
 
 @st.cache_resource
 def authenticate_drive():
-    # Criar arquivo temporário com conteúdo do client_secrets.json vindo dos Secrets
-    with open("client_secrets.json", "w") as f:
-        f.write(secrets["client_secrets.json"])
-
     gauth = GoogleAuth()
     gauth.LoadClientConfigFile("client_secrets.json")
     gauth.LocalWebserverAuth()
@@ -24,12 +15,8 @@ def authenticate_drive():
 
 drive = authenticate_drive()
 
-FOLDER_ID = "{folder_id}"
-
 def get_file_by_title(title):
-    file_list = drive.ListFile({{
-        'q': f"title='{{title}}' and '{{FOLDER_ID}}' in parents and trashed=false"
-    }}).GetList()
+    file_list = drive.ListFile({'q': f"title='{title}' and trashed=false"}).GetList()
     return file_list[0] if file_list else None
 
 def download_csv(file_title, local_name):
@@ -38,7 +25,7 @@ def download_csv(file_title, local_name):
         file.GetContentFile(local_name)
         return pd.read_csv(local_name)
     else:
-        st.error(f"Arquivo '{{file_title}}' não encontrado na pasta do Google Drive.")
+        st.error(f"Arquivo '{file_title}' não encontrado no Google Drive.")
         return pd.DataFrame()
 
 def upload_csv(local_name, file_title):
@@ -47,7 +34,7 @@ def upload_csv(local_name, file_title):
         file.SetContentFile(local_name)
         file.Upload()
     else:
-        file = drive.CreateFile({{'title': file_title, 'parents': [{{'id': FOLDER_ID}}]}})
+        file = drive.CreateFile({'title': file_title})
         file.SetContentFile(local_name)
         file.Upload()
 
@@ -57,7 +44,7 @@ insem_filename = "inseminacoes_iniciais.csv"
 stock_df = download_csv(stock_filename, "stock_temp.csv")
 inseminacoes_df = download_csv(insem_filename, "insem_temp.csv")
 
-st.set_page_config(page_title="Gestor de Sémen - Embriovet", layout="wide")
+st.set_page_config(page_title="Gestor de Sémen - Google Drive", layout="wide")
 st.title("📊 Gestor de Sémen - Embriovet (Google Drive)")
 
 menu = st.sidebar.radio("Navegar", ["📦 Consultar Stock", "📝 Registrar Inseminação", "📈 Relatórios"])
@@ -89,17 +76,17 @@ elif menu == "📝 Registrar Inseminação":
         for idx, row in protocolos.iterrows():
             col1, col2 = st.columns([4, 1])
             with col1:
-                st.write(f"{{row['Data de Produção (Embriovet)'] or row['Origem Externa / Referência']}} - Existência: {{row['Existência Atual']}}")
+                st.write(f"{row['Data de Produção (Embriovet)'] or row['Origem Externa / Referência']} - Existência: {row['Existência Atual']}")
             with col2:
-                qtd = st.number_input(f"Gastas ({{idx}})", min_value=0, max_value=int(row['Existência Atual']), step=1, key=f"qtd_{{idx}}")
+                qtd = st.number_input(f"Gastas ({idx})", min_value=0, max_value=int(row['Existência Atual']), step=1, key=f"qtd_{idx}")
                 if qtd > 0:
-                    new_records.append({{
+                    new_records.append({
                         "Garanhão": garanhao,
                         "Data Inseminação": data,
                         "Égua": egua,
                         "Protocolo (Data/Origem)": row["Data de Produção (Embriovet)"] or row["Origem Externa / Referência"],
                         "Palhetas Gastas": qtd
-                    }})
+                    })
                     stock_df.at[idx, "Existência Atual"] -= qtd
 
         if st.button("💾 Registrar Inseminação") and egua and new_records:
@@ -116,6 +103,3 @@ elif menu == "📝 Registrar Inseminação":
 elif menu == "📈 Relatórios":
     st.header("📈 Relatório de Inseminações")
     st.dataframe(inseminacoes_df.sort_values(by="Data Inseminação", ascending=False), use_container_width=True)
-"""
-
-updated_code
