@@ -1,0 +1,23 @@
+
+PASSO A PASSO PARA PUBLICAR SUA APP NO STREAMLIT CLOUD:
+
+1. Crie um repositório no GitHub, por exemplo: embriovet-gestor
+
+2. Faça upload dos seguintes arquivos:
+   - app_drive.py (o seu código principal)
+   - requirements.txt
+   - a pasta .streamlit com config.toml dentro
+
+3. NÃO envie o client_secrets.json para o GitHub (por segurança)
+
+4. Vá para: https://share.streamlit.io
+   - Clique em "New app"
+   - Selecione seu repositório GitHub e o arquivo app_drive.py
+
+5. Acesse sua app (ex: https://<seunome>.streamlit.app)
+
+6. Para configurar o Google Drive:
+   - Vá até as configurações do Streamlit Cloud → Secrets
+   - Crie um segredo chamado client_secrets.json com o conteúdo JSON do arquivo
+
+7. Feito! A app ficará online, segura e restrita ao domínio embriovet.pt
