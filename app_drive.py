@@ -119,4 +119,3 @@ elif menu == "📈 Relatórios":
 """
 
 updated_code
-Atualiza app_drive.py com integração ao Google Drive
